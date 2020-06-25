@@ -1,0 +1,152 @@
+﻿@model EMS201724112120.Models.Equipment
+@using EMS201724112120.Models;
+@{
+    Layout = null;
+    ViewBag.Title = "EditData";
+}
+
+<html>
+<head>
+    <title>修改设备信息</title>
+    <link href="~/lib/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <script src="~/lib/bootstrap/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/bootstrap.min.js"></script>
+
+</head>
+<body>
+
+    <!--用户界面导航-->
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/Employee/">员工管理</a>
+                <a class="navbar-brand" href="/Equipment/">设备管理</a>
+                <a class="navbar-brand" href="/Department/">部门管理</a>
+            </div>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#">欢迎你：@Session["name"]</a></li>
+                    <li><a href="/Login/Logout">退出</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    @using (Html.BeginForm("EditDataed", "Equipment", FormMethod.Post))
+    {
+        <h2 style="text-align:center;">修改设备信息</h2>
+        <div class="row" style="margin: 10px auto 0px auto;width:60%;">
+            <div class="col-md-12">
+                <table class="table table-bordered table-hover table-striped">
+
+                    <tr>
+                        <td colspan="2">修改 @Html.HiddenFor(a => a.Id)</td>
+                    </tr>
+                    <tr>
+                        <td>设备名称:</td>
+                        @*注释*@
+                        <td>@Html.TextBoxFor(a => a.name)</td>
+                    </tr>
+                    <tr>
+                        <td>设备规格</td>
+                        <td>@Html.TextBoxFor(a => a.specs)</td>
+                    </tr>
+                    <tr>
+                        <td>设备价格</td>
+                        <td>@Html.TextBoxFor(a => a.price)</td>
+                    </tr>
+                    <tr>
+                        <td>录入时间</td>
+                        <td>
+                            @Html.TextBoxFor(a => a.datatime, new { Value = String.Format("{0:yyyy/MM/dd}", Model.datatime) })
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>存放位置</td>
+                        <td>@Html.TextBoxFor(a => a.location)</td>
+                    </tr>
+                    <tr>
+                        <td>管理员</td>
+                        <td>@Html.TextBoxFor(a => a.manager)</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><input type="submit" value="确认修改" />@Html.ActionLink("返回", "Index", "Equipment")</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    }
+    <div class="row" style="margin: 0 auto;width:60%;">
+        <div class="col-md-12">
+            <table class="table table-bordered table-hover table-striped">
+                <tr>
+                    <td>设备图片</td>
+                    <td>
+                        <!--预览-->
+                        @if (@Model.image == null)
+                        {
+                            <img id="img1" src="" alt="" style="width:200px;height:100px" /><br />
+                        }
+                        else
+                        {
+                            <img id="img1" src="data:image/jpg;base64,@Convert.ToBase64String(@Model.image)" style="width:200px;height:100px;" />
+                        }
+
+                        <input type="file" name="filename" id="file1" />
+                        <button class="btn btn-primary" onclick="updataImage(@Model.Id)">上传图片</button><span id="text"></span>
+                        @Html.ActionLink("返回", "Index", "Equipment")
+                    </td>
+                </tr>
+
+            </table>
+            </div>
+        </div>
+</body>
+</html>
+<script>
+    $("#file1").on("change", function () {
+        var file = this.files[0];
+        if (this.files && file) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $("#img1").attr("src", e.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+    function updataImage(id) {
+        console.log(id);
+        images = $("#img1").attr("src");
+        images = images.substring(images.indexOf(',') + 1);
+        $.ajax({
+            url: "/Equipment/updateImage/",
+            type: "POST",
+            dataType: "text",
+            contentType: "application/json;charset=utf-8",
+            data: 
+                JSON.stringify({ id: id, imageBase: images }),
+            
+            success: function (data) {
+                console.log(data);
+                if (data == "success") {
+                    $("#text").text("上传图片成功");
+                    
+
+                }
+            },
+            error: function (data) {
+                console.log("失败");
+                $("#text").text("上传图片失败");
+            }
+        });
+    }
+</script>
+
+

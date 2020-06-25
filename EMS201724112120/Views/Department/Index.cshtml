@@ -1,0 +1,224 @@
+﻿@using EMS201724112120.Models;
+@model PagedList.IPagedList < EMS201724112120.Models.Department>
+@using PagedList.Mvc;
+@using Newtonsoft.Json;
+@{
+    ViewBag.Title = "Index";
+    Layout = null;
+}
+<html>
+<head>
+    <title>部门信息管理</title>
+    <link href="~/lib/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <script src="~/lib/bootstrap/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/bootstrap.min.js"></script>
+    <style>
+        #table1 th {
+            text-align: center;
+        }
+
+        #table1 td {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!--用户界面导航-->
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/Employee/">员工管理</a>
+                <a class="navbar-brand" href="/Equipment/">设备管理</a>
+                <a class="navbar-brand" href="/Department/">部门管理</a>
+            </div>
+            
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#">欢迎你：@Session["name"]</a></li>
+                    <li><a href="/Login/Logout">退出</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!--主题模块-->
+    <div class="row" style="margin: 10px 10px 0 10px;">
+        <div class="col-md-12">
+
+            <button class="btn btn-primary" data-toggle="modal" data-target="#add">添加</button>
+            <form class="navbar-form navbar-right">
+                <div class="form-group">
+                    <select id="select" class="selectpicker">
+                        <option id="0">请选择条件</option>
+                        <option id="1">编号</option>
+                        <option id="2">部门名称</option>
+                    </select>
+                    <input type="text" id="selecttext" class="form-control" placeholder="请输入搜索信息">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="searchbytext()">搜索</button>
+            </form>
+            <table class="table table-bordered table-hover table-striped" id="table1">
+                <tr>
+                    <th>编号</th>
+                    <th>部门名称</th>
+                    <th>部门管理员</th>
+                    <th>操作</th>
+                </tr>
+                @foreach (Department department in Model)
+                {
+                    <tr>
+                        <td>@department.Id</td>
+                        <td>@department.name</td>
+                        @if (@department.Employee !=null)
+                        {
+                            <td>@department.Employee.name</td>
+                        }
+                        else
+                        {
+                            <td>暂无部门管理员</td>
+                        }
+                        
+
+                        <td>
+                            <!--javascript:Del(@department.Id)
+                                javascript:Modify(@department.Id)
+                                -->
+                            <button class="btn btn-danger btn-xs" onclick="del(@department.Id)">
+                                删除
+                            </button>&nbsp;&nbsp;
+                            <button class="btn btn-primary btn-xs" onclick="Modify(@department.Id)">
+                                修改
+                            </button>&nbsp;&nbsp;
+                            <button class="btn btn-primary btn-xs" onclick="findAll(@department.Id)">
+                                查看所有员工
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </table>
+           
+            <div style="float:right;">
+                每页 @Model.PageSize 条记录，共 @Model.PageCount 页，当前第 @Model.PageNumber 页
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page }))
+            </div>
+        </div>
+    </div>
+    <!-- 模态框（Modal） -->
+
+    <div class="modal fade" id="add" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="myModalLabel">新增 信息</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered table-hover table-striped">
+                        <tr>
+                            <td>部门名称</td>
+                            <td><input type="text" name="dname" id="dname" placeholder="请输入部门名称" /></td>
+                        </tr>
+                        <tr>
+                            <td>管理员</td>
+                            <td><input type="text" name="dadmin" id="dadmin" placeholder="请输入部门管理员编号"/></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" onclick="reset()">重置</button>
+                    <button type="button" class="btn btn-primary" onclick="add()">提交</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal -->
+    </div>
+    <!-- 模态框（Modal）end -->
+
+</body>
+
+
+</html>
+<script type="text/javascript">
+    function searchbytext() {
+        var keyword = $("#selecttext").val();                //获取搜索框关键字
+        var selecttext = $("#select option:selected").attr("id");//获取查询条件
+        if (keyword == null || keyword == "") {
+
+        } else {
+            window.location.href = "/Department/findBy?word=" + keyword + "&num=" + selecttext;
+        }
+    }
+    function findAll(id) {
+        window.location = "/Department/AllEmployees?id=" + id;
+    }
+    function add() {
+        console.log("点击了xxx");
+        var department = {
+            Id: 0,
+            name: $("input[name='dname']").val(),
+            admin: $("input[name='dadmin']").val()
+
+        }
+        console.log(department);
+        $.ajax({
+            url: "/Department/Add/",
+            type: "POST",
+            dataType: "text",
+            contentType: "application/json;charset=utf-8",
+            data: JSON.stringify(department),
+            success: function (data) {
+                console.log("添加成功");
+
+                console.log(data);
+                if (data == "success") {
+                    $('#add').modal('hide');
+                    window.location = "/Department/"
+                }
+            },
+            error: function (data) {
+                console.log("添加失败");
+            }
+        });
+    }
+    function del(id){
+        console.log(id);
+        if (confirm("确认要删除这条数据吗？")) {
+            window.location = "/Department/Delete/" + id;
+        }
+    }
+    function modify(id) {
+        console.log(id);
+        $.ajax({
+            url: '/Department/EditData/',
+            type: 'post',
+            data: { 'id': id },
+            dataType: 'JSON',
+            success: function (data) {
+                console.log("成功访问");
+                console.log(data);
+            },
+            error: function (data) {
+                console.log("访问失败");
+                console.log(data);
+            }
+        });
+
+    }
+    function Del(id) {
+        if (confirm("您确定要删除吗？亲~~")) {
+            window.location = "/Department/Delete/" + id;
+        }
+    }
+    function Modify(id) {
+        window.location = "/Department/EditData/" + id;
+    }
+
+</script>
+

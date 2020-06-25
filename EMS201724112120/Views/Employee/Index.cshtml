@@ -1,0 +1,256 @@
+﻿@using EMS201724112120.Models;
+@model PagedList.IPagedList<EMS201724112120.Models.Employee>
+@using PagedList.Mvc;
+@using Newtonsoft.Json;
+@{
+    ViewBag.Title = "Index";
+    Layout = null;
+}
+<html>
+<head>
+    <title>员工信息管理</title>
+    <link href="~/lib/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/PagedList.css" rel="stylesheet" />
+    <script src="~/lib/bootstrap/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/bootstrap.min.js"></script>
+    <style>
+        #table1 th {
+            text-align: center;
+        }
+
+        #table1 td {
+            text-align: center;
+        }
+        #table1{
+            margin-top:15px;
+        }
+    </style>
+
+</head>
+<body>
+    <!--用户界面导航-->
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/Employee/">员工管理</a>
+                <a class="navbar-brand" href="/Equipment/">设备管理</a>
+                <a class="navbar-brand" href="/Department/">部门管理</a>
+            </div>
+            
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#">欢迎你：@Session["name"]</a></li>
+                    <li><a href="/Login/Logout">退出</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!--主题模块-->
+    <div class="row" style="margin: 10px 10px 0 10px;">
+        <div class="col-md-12">
+            <button class="btn btn-primary " data-toggle="modal" data-target="#add">添加员工</button>
+            <form class="navbar-form navbar-right">
+                <div class="form-group">
+                    <select id="select" class="selectpicker">
+                        <option id="0">请选择条件</option>
+                        <option id="1">编号</option>
+                        <option id="2">员工姓名</option>
+                    </select>
+                    <input type="text" id="selecttext" class="form-control" placeholder="请输入搜索信息">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="searchbytext()">搜索</button>
+            </form>
+            <table class="table table-bordered table-hover table-striped" id="table1">
+                <tr>
+                    <th>编号</th>
+                    <th>姓名</th>
+                    <th>密码</th>
+                    <th>性别</th>
+                    <th>电话</th>
+                    <th>管理员</th>
+                    <th>所属部门</th>
+                    <th>操作</th>
+                </tr>
+                @foreach (Employee employee in Model)
+                {
+                    <tr>
+                        <td>@employee.Id</td>
+                        <td>@employee.name</td>
+                        <td>@employee.password</td>
+                        <td>@employee.sex</td>
+                        <td>@employee.phone</td>
+                        @if (@employee.admin == true)
+                        {
+                            <td>是</td>
+                        }
+                        else
+                        {
+                            <td>否</td>
+                        }
+                        @if (@employee.Department == null)
+                        {
+                            <td>无所在部门</td>
+                        }
+                        else
+                        {
+                            <td>@employee.Department.name</td>
+                        }
+                       
+                        <td>
+                            
+                            <button class="btn btn-danger btn-xs" onclick="del(@employee.Id)">删除
+                                @*<a href="javascript:Del(@employee.Id)">删除</a>*@
+                            </button>&nbsp;&nbsp;
+                            <button class="btn btn-primary btn-xs" onclick="Modify(@employee.Id)">修改
+                                @*<a href="javascript:Modify(@employee.Id)">修改</a>*@
+                            </button>
+                       </td>
+                    </tr>
+                }
+            </table>
+            
+            <div style="float:right;">
+                每页 @Model.PageSize 条记录，共 @Model.PageCount 页，当前第 @Model.PageNumber 页
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page }))
+            </div>
+        </div>
+    </div>
+    <!-- 模态框（Modal） -->
+
+    <div class="modal fade" id="add" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="myModalLabel">新增 信息</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered table-hover table-striped">
+                        <tr>
+                            <td>姓名</td>
+                            <td><input type="text" name="username" id="username" placeholder="请输入姓名"  /></td>
+                        </tr>
+                        <tr>
+                            <td>密码</td>
+                            <td><input type="text" name="pass" id="pass" placeholder="请输入密码"  /></td>
+                        </tr>
+                        <tr>
+                            <td>性别</td>
+                            <td>
+                                <input type="radio" name="sex" class="sex" id="man" value="男"  checked="checked" />男
+                                <input type="radio" name="sex" class="sex" id="women" value="女"  />女
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>电话</td>
+                            <td><input type="text" name="phone" id="phone" placeholder="请输入电话"  /></td>
+                        </tr>
+                        <tr>
+                            <td>管理员</td>
+                            <td>
+                                <input type="radio" name="admin" class="admin" id="isadmin" value="true"  />是
+                                <input type="radio" name="admin" class="admin" id="noadmin" value="false"  checked="checked" />否
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>所属部门</td>
+                            <td>
+                                <select name="department" >
+                                    <option ></option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" onclick="reset()">重置</button>
+                    <button type="button" class="btn btn-primary" onclick="add()">提交</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal -->
+    </div>
+    <!-- 模态框（Modal）end -->
+
+    </body>
+
+
+</html>
+<script type="text/javascript">
+    function searchbytext() {
+        var keyword = $("#selecttext").val();                //获取搜索框关键字
+        var selecttext = $("#select option:selected").attr("id");//获取查询条件
+        if (keyword == null || keyword=="") {
+            
+        } else {
+            window.location.href = "/Employee/findBy?word=" + keyword + "&num=" + selecttext;
+        }
+    }
+    function add() {
+        console.log("点击了xxx");
+        var employee = {
+            Id: 0,
+            name: $("input[name='username']").val(),
+            password: $("input[name='pass']").val(),
+            sex: $("input[name='sex']").filter(':checked').val(),
+            phone: $("input[name='phone']").val(),
+            admin: $("input[name='admin']").filter(':checked').val(),
+
+        }
+        console.log(employee);
+        $.ajax({
+            url: "/Employee/Add/",
+            type: "POST",
+            dataType: "text",
+            contentType: "application/json;charset=utf-8",
+            data: JSON.stringify(employee),
+            success: function (data) {
+                console.log("添加成功");
+                if (data == "success") {
+                    $('#add').modal('hide');
+                    window.location = "/Employee/"
+                }
+            },
+            error: function (data) {
+                console.log("添加失败");
+            }
+        });
+    }
+    function del(id){
+        console.log(id);
+        if (confirm("确认要删除这条数据吗？")) {
+            window.location = "/Employee/Delete/" + id;
+        }
+    }
+    function modify(id) {
+        console.log(id);
+        $.ajax({
+            url: '/Employee/EditData/',
+            type: 'post',
+            data: { 'id': id },
+            dataType: 'JSON',
+            success: function (data) {
+                console.log("成功访问");
+                console.log(data);
+            },
+            error: function (data) {
+                console.log("访问失败");
+                console.log(data);
+            }
+        });
+
+    }
+    function Modify(id) {
+        window.location = "/Employee/EditData/" + id;
+    }
+
+</script>
+
+
